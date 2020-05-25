@@ -6,36 +6,48 @@ from flask import Flask, request
 
 app = Flask(__name__)
 bot = mebots.Bot('at_everyone', os.environ.get('BOT_TOKEN'))
-
+GROUPME_ACCESS_TOKEN = os.environ.get('GROUPME_ACCESS_TOKEN')
 SEARCH = '@everyone'
+
+
+def get_user_ids(group_id):
+    users = requests.get(f'https://api.groupme.com/v3/groups/{group_id}?token={GROUPME_ACCESS_TOKEN}').json()['response']['members']
+    user_ids = [user['id'] for user in users]
+    return user_ids
+
+
+def send(data):
+    url = 'https://api.groupme.com/v3/bots/post'
+    r = requests.post(url, data=message)
 
 
 def process(message):
     # Prevent self-reply
     if message['sender_type'] != 'bot':
         if SEARCH in message['text'].lower():
-
+            group_id = message['group_id']
+            user_ids = get_user_ids(group_id)
+            response = {
+                'bot_id': bot.instance(group_id).id,
+                'text': '@everyone',
+                'attachments': [{
+                    'loci': [[0, 9]] * len(user_ids),
+                    'type': 'mentions',
+                    'user_ids': user_ids
+                }]
+            }
+            return response
 
 
 # Endpoint
 @app.route('/', methods=['POST'])
 def receive():
     message = request.get_json()
-    group_id = message["group_id"]
     response = process(message)
     if response:
-        send(response, group_id)
+        send(response)
 
     return 'ok', 200
-
-
-def send(data, group_id):
-    url = 'https://api.groupme.com/v3/bots/post'
-
-    data.update({
-        'bot_id': bot.instance(group_id).id,
-    })
-    r = requests.post(url, data=message)
 
 
 if __name__ == '__main__':
