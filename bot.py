@@ -52,4 +52,4 @@ def receive():
 
 if __name__ == '__main__':
     while True:
-        print(process({'text': input('> '), 'sender_type': 'user', 'group_id': None}))
+        print(process({'text': input('> '), 'sender_type': 'user', 'group_id': 49940116}))
