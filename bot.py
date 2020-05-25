@@ -16,7 +16,7 @@ def get_user_ids(group_id):
     return user_ids
 
 
-def send(data):
+def send(message):
     url = 'https://api.groupme.com/v3/bots/post'
     r = requests.post(url, data=message)
 
